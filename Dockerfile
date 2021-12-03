@@ -1,5 +1,4 @@
-FROM openlabs/docker-wkhtmltopdf:latest
-MAINTAINER Sharoon Thomas <sharoon.thomas@openlabs.co.in>
+FROM karlosgm75/wkhtmltopdf
 
 # Install dependencies for running web service
 RUN apt-get install -y python-pip

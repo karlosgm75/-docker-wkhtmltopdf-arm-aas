@@ -7,6 +7,7 @@
 """
 import json
 import tempfile
+import uuid
 
 from werkzeug.wsgi import wrap_file
 from werkzeug.wrappers import Request, Response
@@ -26,12 +27,18 @@ def application(request):
 
     request_is_json = request.content_type.endswith('json')
 
+    is_from_url = False;
+
     with tempfile.NamedTemporaryFile(suffix='.html') as source_file:
 
         if request_is_json:
             # If a JSON payload is there, all data is in the payload
             payload = json.loads(request.data)
-            source_file.write(payload['contents'].decode('base64'))
+            if ("https://" in payload['contents']) or ("http://" in payload['contents']):
+                is_from_url = True
+            else:
+                source_file.write(payload['contents'].decode('base64'))
+
             options = payload.get('options', {})
         elif request.files:
             # First check if any files were uploaded
@@ -39,7 +46,8 @@ def application(request):
             # Load any options that may have been provided in options
             options = json.loads(request.form.get('options', '{}'))
 
-        source_file.flush()
+        if not is_from_url:
+            source_file.flush()
 
         # Evaluate argument to run with subprocess
         args = ['wkhtmltopdf']
@@ -52,8 +60,14 @@ def application(request):
                     args.append('"%s"' % value)
 
         # Add source file name and output file name
-        file_name = source_file.name
-        args += [file_name, file_name + ".pdf"]
+
+        if is_from_url:
+            file_name = str(uuid.uuid4());
+            args += [payload['contents'], file_name + ".pdf"]
+
+        else:
+            file_name = source_file.name;
+            args += [file_name, file_name + ".pdf"]
 
         # Execute the command using executor
         execute(' '.join(args))
@@ -66,6 +80,7 @@ def application(request):
 
 if __name__ == '__main__':
     from werkzeug.serving import run_simple
+
     run_simple(
         '127.0.0.1', 5000, application, use_debugger=True, use_reloader=True
     )
