@@ -1,4 +1,4 @@
-FROM karlosgm75/wkhtmltopdf
+FROM karlosgm75/wkhtmltopdf-arm
 
 # Install dependencies for running web service
 RUN apt-get install -y python-pip
