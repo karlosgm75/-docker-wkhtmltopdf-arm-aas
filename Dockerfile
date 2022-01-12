@@ -1,4 +1,4 @@
-FROM karlosgm75/wkhtmltopdf-arm
+FROM karlosgm75/docker-wkhtmltopdf-arm
 
 # Install dependencies for running web service
 RUN apt-get install -y python-pip
